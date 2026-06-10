@@ -1,0 +1,23 @@
+---
+import "../styles/globals.css";
+import VibeGenerator from "../components/VibeGenerator.tsx";
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/gif" href="/vibe-rabbit.gif" />
+    <title>🐰 Vibe Bunny Generator</title>
+    <meta
+      name="description"
+      content="Sube una imagen y conviértela en el fondo del conejo vibrante. Genera tu meme GIF animado."
+    />
+  </head>
+  <body class="vibe-bg min-h-screen w-full">
+    <main class="flex min-h-screen w-full items-center justify-center p-4 sm:p-8">
+      <VibeGenerator client:load />
+    </main>
+  </body>
+</html>

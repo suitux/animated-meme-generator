@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Baloo 2", system-ui, sans-serif;
+
+  --color-vibe-pink: #ff5fa2;
+  --color-vibe-purple: #a855f7;
+  --color-vibe-cyan: #22d3ee;
+  --color-vibe-yellow: #ffe14d;
+
+  --animate-wiggle: wiggle 0.8s ease-in-out infinite;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-pop: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-shimmer: shimmer 8s ease infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+:root {
+  color-scheme: light;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Playful animated gradient backdrop */
+.vibe-bg {
+  background: linear-gradient(
+    120deg,
+    var(--color-vibe-pink),
+    var(--color-vibe-purple),
+    var(--color-vibe-cyan),
+    var(--color-vibe-yellow)
+  );
+  background-size: 300% 300%;
+  animation: var(--animate-shimmer);
+}
+
+/* Checkerboard so transparent areas are visible in previews */
+.checker {
+  background-image:
+    linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
+    linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+    linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-color: #f9fafb;
+}
