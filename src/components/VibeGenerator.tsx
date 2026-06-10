@@ -19,11 +19,12 @@ export default function VibeGenerator() {
   const [error, setError] = React.useState<string | null>(null);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const isVideo = !!file && file.type.startsWith("video/");
 
   function pickFile(f: File | null | undefined) {
     if (!f) return;
-    if (!f.type.startsWith("image/")) {
-      setError("That doesn't look like an image 🙈 Upload a PNG/JPG.");
+    if (!f.type.startsWith("image/") && !f.type.startsWith("video/")) {
+      setError("That doesn't look like an image or video 🙈 Upload a PNG/JPG/GIF/MP4.");
       return;
     }
     setError(null);
@@ -98,20 +99,33 @@ export default function VibeGenerator() {
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           className="hidden"
           onChange={(e) => pickFile(e.target.files?.[0])}
         />
         <p className="font-bold text-vibe-purple">
-          {file ? `📸 ${file.name}` : "Drag an image or click"}
+          {file ? `📸 ${file.name}` : "Drag an image or video, or click"}
         </p>
-        <p className="text-xs text-gray-400">PNG · JPG · WEBP</p>
+        <p className="text-xs text-gray-400">PNG · JPG · GIF · WEBP · MP4 · WEBM</p>
       </div>
 
       {/* Live preview */}
       <div className="mt-5 flex justify-center">
         <div className="checker relative h-56 w-56 overflow-hidden rounded-2xl ring-4 ring-white shadow-inner">
-          {bgUrl ? (
+          {bgUrl && isVideo ? (
+            <video
+              src={bgUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 h-full w-full"
+              style={{
+                objectFit: fit === "stretch" ? "fill" : fit,
+                backgroundColor: bgColor,
+              }}
+            />
+          ) : bgUrl ? (
             <img
               src={bgUrl}
               alt="background"
