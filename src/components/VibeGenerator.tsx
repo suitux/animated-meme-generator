@@ -116,7 +116,10 @@ export default function VibeGenerator() {
               src={bgUrl}
               alt="fondo"
               className="absolute inset-0 h-full w-full"
-              style={{ objectFit: fit, backgroundColor: bgColor }}
+              style={{
+                objectFit: fit === "stretch" ? "fill" : fit,
+                backgroundColor: bgColor,
+              }}
             />
           ) : (
             <div className="absolute inset-0 grid place-items-center text-gray-400 text-sm font-semibold">
@@ -162,18 +165,22 @@ export default function VibeGenerator() {
               Encaje
             </label>
             <div className="inline-flex rounded-xl bg-white/70 p-1">
-              {(["cover", "contain"] as FitMode[]).map((m) => (
+              {(["cover", "contain", "stretch"] as FitMode[]).map((m) => (
                 <button
                   key={m}
                   onClick={() => setFit(m)}
                   className={[
-                    "rounded-lg px-4 py-1.5 text-sm font-bold capitalize transition-all",
+                    "rounded-lg px-3 py-1.5 text-sm font-bold capitalize transition-all",
                     fit === m
                       ? "bg-vibe-pink text-white shadow"
                       : "text-gray-500 hover:text-gray-700",
                   ].join(" ")}
                 >
-                  {m === "cover" ? "Recortar" : "Completa"}
+                  {m === "cover"
+                    ? "Recortar"
+                    : m === "contain"
+                      ? "Completa"
+                      : "Estirar"}
                 </button>
               ))}
             </div>

@@ -21,7 +21,7 @@ async function loadGifenc() {
   };
 }
 
-export type FitMode = "cover" | "contain";
+export type FitMode = "cover" | "contain" | "stretch";
 
 export interface RabbitFrame {
   /** Full-size RGBA pixels for this frame (gifWidth * gifHeight * 4). */
@@ -110,6 +110,15 @@ function drawBackground(
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, size, size);
 
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  // stretch = fill the square exactly, ignoring aspect ratio
+  if (fit === "stretch") {
+    ctx.drawImage(img, 0, 0, size, size);
+    return;
+  }
+
   const scale =
     fit === "cover"
       ? Math.max(size / iw, size / ih)
@@ -119,8 +128,6 @@ function drawBackground(
   const dx = (size - dw) / 2;
   const dy = (size - dh) / 2;
 
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(img, dx, dy, dw, dh);
 }
 
