@@ -23,7 +23,7 @@ export default function VibeGenerator() {
   function pickFile(f: File | null | undefined) {
     if (!f) return;
     if (!f.type.startsWith("image/")) {
-      setError("Eso no parece una imagen 🙈 Sube un PNG/JPG.");
+      setError("That doesn't look like an image 🙈 Upload a PNG/JPG.");
       return;
     }
     setError(null);
@@ -55,7 +55,7 @@ export default function VibeGenerator() {
       });
     } catch (e) {
       console.error(e);
-      setError("Algo explotó al generar el GIF 💥 Prueba con otra imagen.");
+      setError("Something blew up generating the GIF 💥 Try another image.");
     } finally {
       setBusy(false);
     }
@@ -71,7 +71,7 @@ export default function VibeGenerator() {
           </span>
         </h1>
         <p className="mt-1 text-sm font-semibold text-gray-500">
-          Pon tu imagen de fondo al conejo vibrante y descarga el meme 🎉
+          Drop your image behind the vibey bunny and download the meme 🎉
         </p>
       </header>
 
@@ -103,7 +103,7 @@ export default function VibeGenerator() {
           onChange={(e) => pickFile(e.target.files?.[0])}
         />
         <p className="font-bold text-vibe-purple">
-          {file ? `📸 ${file.name}` : "Arrastra una imagen o haz click"}
+          {file ? `📸 ${file.name}` : "Drag an image or click"}
         </p>
         <p className="text-xs text-gray-400">PNG · JPG · WEBP</p>
       </div>
@@ -114,7 +114,7 @@ export default function VibeGenerator() {
           {bgUrl ? (
             <img
               src={bgUrl}
-              alt="fondo"
+              alt="background"
               className="absolute inset-0 h-full w-full"
               style={{
                 objectFit: fit === "stretch" ? "fill" : fit,
@@ -123,12 +123,12 @@ export default function VibeGenerator() {
             />
           ) : (
             <div className="absolute inset-0 grid place-items-center text-gray-400 text-sm font-semibold">
-              vista previa
+              preview
             </div>
           )}
           <img
             src="/vibe-rabbit.gif"
-            alt="conejo"
+            alt="bunny"
             className="absolute inset-0 h-full w-full [image-rendering:pixelated]"
             style={{ objectFit: "fill" }}
           />
@@ -139,7 +139,7 @@ export default function VibeGenerator() {
       <div className="mt-6 space-y-4">
         <div>
           <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
-            Tamaño del meme
+            Meme size
           </label>
           <div className="flex flex-wrap gap-2">
             {SIZES.map((s) => (
@@ -162,7 +162,7 @@ export default function VibeGenerator() {
         <div className="flex flex-wrap items-end gap-4">
           <div>
             <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
-              Encaje
+              Fit
             </label>
             <div className="inline-flex rounded-xl bg-white/70 p-1">
               {(["cover", "contain", "stretch"] as FitMode[]).map((m) => (
@@ -177,10 +177,10 @@ export default function VibeGenerator() {
                   ].join(" ")}
                 >
                   {m === "cover"
-                    ? "Recortar"
+                    ? "Crop"
                     : m === "contain"
-                      ? "Completa"
-                      : "Estirar"}
+                      ? "Fit"
+                      : "Stretch"}
                 </button>
               ))}
             </div>
@@ -189,7 +189,7 @@ export default function VibeGenerator() {
           {fit === "contain" && (
             <div>
               <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
-                Relleno
+                Fill
               </label>
               <input
                 type="color"
@@ -216,7 +216,7 @@ export default function VibeGenerator() {
           disabled={!file || busy}
           onClick={generate}
         >
-          {busy ? `Generando… ${progress}%` : "✨ Generar GIF ✨"}
+          {busy ? `Generating… ${progress}%` : "✨ Generate GIF ✨"}
         </Button>
         {busy && (
           <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-black/10">
@@ -231,11 +231,11 @@ export default function VibeGenerator() {
       {/* Result */}
       {resultUrl && (
         <div className="mt-6 animate-pop rounded-2xl bg-gradient-to-br from-vibe-yellow/40 to-vibe-cyan/30 p-4 text-center">
-          <p className="mb-3 font-black text-gray-700">¡Tu meme está listo! 🥳</p>
+          <p className="mb-3 font-black text-gray-700">Your meme is ready! 🥳</p>
           <div className="checker mx-auto mb-4 inline-block overflow-hidden rounded-xl ring-4 ring-white">
             <img
               src={resultUrl}
-              alt="meme generado"
+              alt="generated meme"
               width={224}
               height={224}
               className="block h-56 w-56 object-contain [image-rendering:auto]"
@@ -243,10 +243,10 @@ export default function VibeGenerator() {
           </div>
           <div className="flex flex-wrap justify-center gap-3">
             <a href={resultUrl} download="vibe-bunny.gif">
-              <Button>⬇️ Descargar GIF</Button>
+              <Button>⬇️ Download GIF</Button>
             </a>
             <Button variant="outline" onClick={generate} disabled={busy}>
-              🔁 Regenerar
+              🔁 Regenerate
             </Button>
           </div>
         </div>
