@@ -23,6 +23,17 @@ async function loadGifenc() {
 
 export type FitMode = "cover" | "contain" | "stretch";
 
+/** Overlay characters the user can pick. `src` points at a GIF in /public. */
+export type Character = "rabbit" | "cat";
+
+export const CHARACTERS: Record<
+  Character,
+  { label: string; emoji: string; src: string }
+> = {
+  rabbit: { label: "Bunny", emoji: "🐰", src: "/vibe-rabbit.gif" },
+  cat: { label: "Cat", emoji: "🐱", src: "/vibe-cat.gif" },
+};
+
 export interface RabbitFrame {
   /** Full-size RGBA pixels for this frame (gifWidth * gifHeight * 4). */
   data: Uint8ClampedArray;
@@ -36,12 +47,13 @@ export interface RabbitGif {
   frames: RabbitFrame[];
 }
 
-let cache: Promise<RabbitGif> | null = null;
+const cache = new Map<string, Promise<RabbitGif>>();
 
-/** Decode the rabbit GIF once, accumulating partial patches + disposal into full frames. */
+/** Decode an overlay GIF once (per src), accumulating partial patches + disposal into full frames. */
 export function loadRabbitFrames(src = "/vibe-rabbit.gif"): Promise<RabbitGif> {
-  if (cache) return cache;
-  cache = (async () => {
+  const cached = cache.get(src);
+  if (cached) return cached;
+  const promise = (async () => {
     const { parseGIF, decompressFrames } = await loadGifuct();
     const buf = await fetch(src).then((r) => r.arrayBuffer());
     const gif = parseGIF(buf);
@@ -93,7 +105,8 @@ export function loadRabbitFrames(src = "/vibe-rabbit.gif"): Promise<RabbitGif> {
 
     return { width, height, frames };
   })();
-  return cache;
+  cache.set(src, promise);
+  return promise;
 }
 
 /** Draw a background source (image/gif-frame/video) onto a square ctx using the fit mode. */
@@ -309,19 +322,22 @@ export interface BuildMemeOptions {
   size: number;
   fit: FitMode;
   bgColor?: string;
+  /** Which overlay character to composite on top. Defaults to the bunny. */
+  character?: Character;
   onProgress?: (done: number, total: number) => void;
 }
 
-/** Composite the uploaded image behind every rabbit frame and encode an animated GIF. */
+/** Composite the uploaded image behind every overlay frame and encode an animated GIF. */
 export async function buildMeme({
   source,
   size,
   fit,
   bgColor = "#ffffff",
+  character = "rabbit",
   onProgress,
 }: BuildMemeOptions): Promise<Blob> {
   const { GIFEncoder, quantize, applyPalette } = await loadGifenc();
-  const rabbit = await loadRabbitFrames();
+  const rabbit = await loadRabbitFrames(CHARACTERS[character].src);
   const bg = await prepareBackground(source);
 
   // canvas holding the current rabbit frame at native gif size

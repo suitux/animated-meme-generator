@@ -1,9 +1,16 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { buildMeme, fetchBackground, type FitMode } from "@/lib/gif";
+import {
+  buildMeme,
+  fetchBackground,
+  CHARACTERS,
+  type FitMode,
+  type Character,
+} from "@/lib/gif";
 
 const SIZES = [112, 256, 512, 768, 1024];
+const CHARACTER_KEYS = Object.keys(CHARACTERS) as Character[];
 
 export default function VibeGenerator() {
   const [source, setSource] = React.useState<Blob | null>(null);
@@ -12,6 +19,7 @@ export default function VibeGenerator() {
   const [url, setUrl] = React.useState("");
   const [loadingUrl, setLoadingUrl] = React.useState(false);
   const [size, setSize] = React.useState(512);
+  const [character, setCharacter] = React.useState<Character>("rabbit");
   const [fit, setFit] = React.useState<FitMode>("cover");
   const [bgColor, setBgColor] = React.useState("#ffffff");
   const [dragging, setDragging] = React.useState(false);
@@ -73,6 +81,7 @@ export default function VibeGenerator() {
         size,
         fit,
         bgColor,
+        character,
         onProgress: (done, total) => setProgress(Math.round((done / total) * 100)),
       });
       setResultUrl((prev) => {
@@ -91,13 +100,15 @@ export default function VibeGenerator() {
     <Card className="w-full max-w-xl p-6 sm:p-8 animate-pop">
       <header className="text-center mb-6">
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
-          <span className="inline-block animate-float">🐰</span>{" "}
+          <span className="inline-block animate-float">
+            {CHARACTERS[character].emoji}
+          </span>{" "}
           <span className="bg-gradient-to-r from-vibe-pink via-vibe-purple to-vibe-cyan bg-clip-text text-transparent">
-            Vibe Bunny Generator
+            Vibe {CHARACTERS[character].label} Generator
           </span>
         </h1>
         <p className="mt-1 text-sm font-semibold text-gray-500">
-          Drop your image behind the vibey bunny and download the meme 🎉
+          Drop your image behind the vibey {CHARACTERS[character].label.toLowerCase()} and download the meme 🎉
         </p>
       </header>
 
@@ -192,8 +203,8 @@ export default function VibeGenerator() {
             </div>
           )}
           <img
-            src="/vibe-rabbit.gif"
-            alt="bunny"
+            src={CHARACTERS[character].src}
+            alt={CHARACTERS[character].label}
             className="absolute inset-0 h-full w-full [image-rendering:pixelated]"
             style={{ objectFit: "fill" }}
           />
@@ -202,6 +213,36 @@ export default function VibeGenerator() {
 
       {/* Controls */}
       <div className="mt-6 space-y-4">
+        <div>
+          <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
+            Character
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {CHARACTER_KEYS.map((key) => {
+              const c = CHARACTERS[key];
+              const active = character === key;
+              return (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setCharacter(key);
+                    setResultUrl(null);
+                  }}
+                  className={[
+                    "flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition-all active:scale-95",
+                    active
+                      ? "bg-gradient-to-r from-vibe-pink to-vibe-purple text-white shadow ring-2 ring-vibe-purple/40"
+                      : "bg-white/70 text-gray-600 hover:bg-white",
+                  ].join(" ")}
+                >
+                  <span className="text-lg">{c.emoji}</span>
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div>
           <label className="block text-xs font-black uppercase tracking-wide text-gray-500 mb-2">
             Meme size
