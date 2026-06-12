@@ -144,7 +144,7 @@ interface Background {
 }
 
 /** Decode an animated GIF (uploaded as background) into per-frame canvases. */
-async function decodeGifBackground(file: File): Promise<Background> {
+async function decodeGifBackground(file: Blob): Promise<Background> {
   const { parseGIF, decompressFrames } = await loadGifuct();
   const buf = await file.arrayBuffer();
   const gif = parseGIF(buf);
@@ -207,7 +207,7 @@ async function decodeGifBackground(file: File): Promise<Background> {
 }
 
 /** Load an uploaded video as a background, seeking per frame. */
-async function decodeVideoBackground(file: File): Promise<Background> {
+async function decodeVideoBackground(file: Blob): Promise<Background> {
   const url = URL.createObjectURL(file);
   const video = document.createElement("video");
   video.src = url;
@@ -250,8 +250,8 @@ async function decodeVideoBackground(file: File): Promise<Background> {
   };
 }
 
-/** Build the right Background for an uploaded file (image / gif / video). */
-async function prepareBackground(file: File): Promise<Background> {
+/** Build the right Background for a source blob (image / gif / video). */
+async function prepareBackground(file: Blob): Promise<Background> {
   if (file.type.startsWith("video/")) return decodeVideoBackground(file);
   if (file.type === "image/gif") return decodeGifBackground(file);
 
@@ -265,8 +265,47 @@ async function prepareBackground(file: File): Promise<Background> {
   };
 }
 
+/**
+ * Fetch a background from a URL into a blob so it flows through the same
+ * pipeline as an upload. Cross-origin hosts must send permissive CORS headers,
+ * otherwise the fetch (and later canvas read) is blocked by the browser.
+ */
+export async function fetchBackground(url: string): Promise<Blob> {
+  let res: Response;
+  try {
+    res = await fetch(url, { mode: "cors" });
+  } catch {
+    throw new Error(
+      "Couldn't fetch that URL (network or CORS blocked). Try a direct image/video link."
+    );
+  }
+  if (!res.ok) throw new Error(`The URL returned ${res.status}.`);
+
+  let blob = await res.blob();
+  // Some hosts omit a useful Content-Type; guess from the extension.
+  if (!blob.type || blob.type === "application/octet-stream") {
+    const ext = new URL(url, location.href).pathname.split(".").pop()?.toLowerCase();
+    const guess: Record<string, string> = {
+      gif: "image/gif",
+      png: "image/png",
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      webp: "image/webp",
+      mp4: "video/mp4",
+      webm: "video/webm",
+      mov: "video/quicktime",
+    };
+    if (ext && guess[ext]) blob = blob.slice(0, blob.size, guess[ext]);
+  }
+  if (!blob.type.startsWith("image/") && !blob.type.startsWith("video/")) {
+    throw new Error("That link isn't an image or video.");
+  }
+  return blob;
+}
+
 export interface BuildMemeOptions {
-  file: File;
+  /** Background source: an uploaded file or a blob fetched from a URL. */
+  source: Blob;
   size: number;
   fit: FitMode;
   bgColor?: string;
@@ -275,7 +314,7 @@ export interface BuildMemeOptions {
 
 /** Composite the uploaded image behind every rabbit frame and encode an animated GIF. */
 export async function buildMeme({
-  file,
+  source,
   size,
   fit,
   bgColor = "#ffffff",
@@ -283,7 +322,7 @@ export async function buildMeme({
 }: BuildMemeOptions): Promise<Blob> {
   const { GIFEncoder, quantize, applyPalette } = await loadGifenc();
   const rabbit = await loadRabbitFrames();
-  const bg = await prepareBackground(file);
+  const bg = await prepareBackground(source);
 
   // canvas holding the current rabbit frame at native gif size
   const rabbitCanvas = document.createElement("canvas");

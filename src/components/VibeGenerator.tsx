@@ -1,13 +1,16 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { buildMeme, type FitMode } from "@/lib/gif";
+import { buildMeme, fetchBackground, type FitMode } from "@/lib/gif";
 
 const SIZES = [112, 256, 512, 768, 1024];
 
 export default function VibeGenerator() {
-  const [file, setFile] = React.useState<File | null>(null);
+  const [source, setSource] = React.useState<Blob | null>(null);
+  const [sourceName, setSourceName] = React.useState("");
   const [bgUrl, setBgUrl] = React.useState<string | null>(null);
+  const [url, setUrl] = React.useState("");
+  const [loadingUrl, setLoadingUrl] = React.useState(false);
   const [size, setSize] = React.useState(512);
   const [fit, setFit] = React.useState<FitMode>("cover");
   const [bgColor, setBgColor] = React.useState("#ffffff");
@@ -19,7 +22,18 @@ export default function VibeGenerator() {
   const [error, setError] = React.useState<string | null>(null);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const isVideo = !!file && file.type.startsWith("video/");
+  const isVideo = !!source && source.type.startsWith("video/");
+
+  function useSource(blob: Blob, name: string) {
+    setError(null);
+    setResultUrl(null);
+    setSource(blob);
+    setSourceName(name);
+    setBgUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(blob);
+    });
+  }
 
   function pickFile(f: File | null | undefined) {
     if (!f) return;
@@ -27,24 +41,35 @@ export default function VibeGenerator() {
       setError("That doesn't look like an image or video 🙈 Upload a PNG/JPG/GIF/MP4.");
       return;
     }
+    useSource(f, f.name);
+  }
+
+  async function loadFromUrl() {
+    const link = url.trim();
+    if (!link) return;
+    setLoadingUrl(true);
     setError(null);
-    setResultUrl(null);
-    setFile(f);
-    setBgUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(f);
-    });
+    try {
+      const blob = await fetchBackground(link);
+      const name =
+        new URL(link, location.href).pathname.split("/").pop() || "link";
+      useSource(blob, name);
+    } catch (e: any) {
+      setError(e?.message ?? "Couldn't load that link.");
+    } finally {
+      setLoadingUrl(false);
+    }
   }
 
   async function generate() {
-    if (!file) return;
+    if (!source) return;
     setBusy(true);
     setError(null);
     setProgress(0);
     setResultUrl(null);
     try {
       const blob = await buildMeme({
-        file,
+        source,
         size,
         fit,
         bgColor,
@@ -104,9 +129,35 @@ export default function VibeGenerator() {
           onChange={(e) => pickFile(e.target.files?.[0])}
         />
         <p className="font-bold text-vibe-purple">
-          {file ? `📸 ${file.name}` : "Drag an image or video, or click"}
+          {sourceName ? `📸 ${sourceName}` : "Drag an image or video, or click"}
         </p>
         <p className="text-xs text-gray-400">PNG · JPG · GIF · WEBP · MP4 · WEBM</p>
+      </div>
+
+      {/* Or load from a URL */}
+      <div className="mt-3">
+        <div className="flex items-center gap-2">
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") loadFromUrl();
+            }}
+            placeholder="…or paste an image / video URL"
+            className="h-11 flex-1 rounded-2xl border-2 border-vibe-purple/30 bg-white/70 px-4 text-sm font-semibold text-gray-700 outline-none placeholder:text-gray-400 focus:border-vibe-purple"
+          />
+          <Button
+            variant="outline"
+            onClick={loadFromUrl}
+            disabled={!url.trim() || loadingUrl}
+          >
+            {loadingUrl ? "Loading…" : "🔗 Load"}
+          </Button>
+        </div>
+        <p className="mt-1 text-xs text-gray-400">
+          Link must be a direct file and allow cross-origin (CORS).
+        </p>
       </div>
 
       {/* Live preview */}
@@ -227,7 +278,7 @@ export default function VibeGenerator() {
         <Button
           size="lg"
           className="w-full"
-          disabled={!file || busy}
+          disabled={!source || busy}
           onClick={generate}
         >
           {busy ? `Generating… ${progress}%` : "✨ Generate GIF ✨"}
