@@ -24,7 +24,7 @@ async function loadGifenc() {
 export type FitMode = "cover" | "contain" | "stretch";
 
 /** Overlay characters the user can pick. `src` points at a GIF in /public. */
-export type Character = "rabbit" | "cat";
+export type Character = "rabbit" | "cat" | "cava";
 
 export const CHARACTERS: Record<
   Character,
@@ -32,6 +32,7 @@ export const CHARACTERS: Record<
 > = {
   rabbit: { label: "Bunny", emoji: "🐰", src: "/vibe-rabbit.gif" },
   cat: { label: "Cat", emoji: "🐱", src: "/vibe-cat.gif" },
+  cava: { label: "Cava", emoji: "🍾", src: "/vibe-cava.gif" },
 };
 
 export interface RabbitFrame {
